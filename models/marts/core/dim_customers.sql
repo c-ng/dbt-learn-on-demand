@@ -1,7 +1,3 @@
-{{ config (
-    materialized="table"
-)}}
-
 with customers as (
 
     select * from {{ ref('staged_customers')}}
@@ -13,6 +9,13 @@ orders as (
     select * from {{ ref('staged_orders') }}
 
 ),
+
+fact_orders as (
+
+    select * from {{ ref('fact_orders') }}
+
+),
+
 
 customer_orders as (
 
@@ -30,6 +33,17 @@ customer_orders as (
 ),
 
 
+customer_payments as (
+
+    select
+        customer_id,
+        sum(amount) as lifetime_value
+    from fact_orders
+    group by customer_id
+
+),
+
+
 final as (
 
     select
@@ -38,11 +52,14 @@ final as (
         customers.last_name,
         customer_orders.first_order_date,
         customer_orders.most_recent_order_date,
-        coalesce(customer_orders.number_of_orders, 0) as number_of_orders
+        coalesce(customer_orders.number_of_orders, 0) as number_of_orders,
+        customer_payments.lifetime_value
 
     from customers
 
     left join customer_orders using (customer_id)
+
+    left join customer_payments using (customer_id)
 
 )
 
