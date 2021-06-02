@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: staged_customers
+    columns: 
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+  - name: staged_orders
+    columns: 
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['completed', 'returned', 'shipped', 'placed', 'return_pending']
